@@ -33,10 +33,11 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 
 func handleRequests() {
 	http.HandleFunc("/", homePage)
+	http.HandleFunc("/releases", allReleases)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
-func getReleases() {
+func getReleases() Releases {
 	// query api
 	response, err := http.Get("https://api.watchmode.com/v1/releases/?limit=20&apiKey=rzgc7dNFABuAZVsgILSGYQ8y7ahvvYHZjoraxf6O")
 
@@ -45,20 +46,24 @@ func getReleases() {
 		log.Fatal(err)
 	}
 
-	// parse json
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(string(responseData))
+	// parse json store in variable
 	var responseObject Releases
 	json.Unmarshal(responseData, &responseObject)
 
-}	
+	return responseObject
+}
+
+func allReleases(w http.ResponseWriter, r *http.Request) {
+	newReleases := getReleases()
+	fmt.Println("Enpoint all releases hit")
+	json.NewEncoder(w).Encode(newReleases)
+}
 
 func main() {
-	getReleases()
 	handleRequests();
 }
 
